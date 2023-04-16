@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/BingBase.iml" filepath="$PROJECT_DIR$/BingBase.iml" />
+      <module fileurl="file://$PROJECT_DIR$/SQL-Database.iml" filepath="$PROJECT_DIR$/SQL-Database.iml" />
     </modules>
   </component>
 </project>
