@@ -1,4 +1,5 @@
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 // Создаем класс Database для хранения объектов DataElement
@@ -15,14 +16,14 @@ class Database {
         // Создаем таблицу в базе данных для хранения объектов DataElement
     }
 
-
     // Создаем метод createTable для создания таблицы в базе данных
-    public void createTable() throws SQLException {
+    public void createTable(String table_name) throws SQLException {
         // Создаем объект Statement для выполнения SQL-запросов
         Statement stmt = conn.createStatement();
         // Определяем SQL-запрос для создания таблицы с именем elements и двумя столбцами: id (целочисленный первичный ключ) и data (строковый тип)
+        String sql_query = "CREATE TABLE " + table_name + " (id INTEGER not NULL AUTO_INCREMENT, PRIMARY KEY(id));";
         // Выполняем SQL-запрос с помощью метода executeUpdate
-        stmt.executeUpdate("CREATE TABLE "+getTableName()+" (id INTEGER not NULL AUTO_INCREMENT, PRIMARY KEY(id));");
+        stmt.executeUpdate(sql_query);
         // Закрываем объект Statement
         stmt.close();
     }
@@ -36,104 +37,114 @@ class Database {
 
     public String getTableName() {
         System.out.println("Введите имя таблицы");
-        String tableName = input.nextLine();
-        return "`" + tableName + "`";
+        return input.nextLine();
     }
 
-    public void deleteTable() throws SQLException {
+    public void deleteTable(String table_name) throws SQLException {
         // Создаем объект Statement для выполнения SQL-запросов
         Statement stmt = conn.createStatement();
         // Создаем SQL-запрос для удаления таблицы
-        String sql = "DROP TABLE IF EXISTS " + getTableName();
+        String sql_query = "DROP TABLE IF EXISTS " + table_name;
         // Выполнением SQL-запроса с помощью метода executeUpdate
-        stmt.executeUpdate(sql);
+        stmt.executeUpdate(sql_query);
         // Завершаем работу с объектом Statement
         stmt.close();
     }
 
-    public void addColumnToTable() throws SQLException {
+    public void addColumnToTable(String column_name, String table_name, int column_type) throws SQLException {
         Statement stmt = conn.createStatement();
-        //We need to add column to table
-        //Asking the user the name of the column
-        System.out.println("Введите имя столбца");
-        String columnName = input.nextLine();
-        //Asking the user the type of the column
-        //We need most used types: int, double, string, date, boolean
-        //Checking the type of the column
-        //Displaying the types of the column
-            System.out.println("Введите тип данных");
-            System.out.println("1. int");
-            System.out.println("2. double");
-            System.out.println("3. string");
-            System.out.println("4. date");
-            System.out.println("5. boolean");
-            //Getting the type of the column
-            int columnType = Integer.parseInt(input.nextLine());
-            String sql;
-            //Checking the type of the column
-            switch (columnType) {
-                case 1 -> {
-                    //Creating the SQL-query
-                    sql = "ALTER TABLE " + getTableName() + " ADD " + columnName + " int;";
-                    //Executing the SQL-query
-                    stmt.executeUpdate(sql);
-                    //Closing the statement
-                    stmt.close();
-                }
-                case 2 -> {
-                    //Creating the SQL-query
-                    sql = "ALTER TABLE " + getTableName() + " ADD " + columnName + " double;";
-                    //Executing the SQL-query
-                    stmt.executeUpdate(sql);
-                    //Closing the statement
-                    stmt.close();
-                }
-                case 3 -> {
-                    //Creating the SQL-query
-                    sql = "ALTER TABLE " + getTableName() + " ADD " + columnName + " VARCHAR(100);";
-                    //Executing the SQL-query
-                    stmt.executeUpdate(sql);
-                    //Closing the statement
-                    stmt.close();
-                }
-                case 4 -> {
-                    //Creating the SQL-query
-                    sql = "ALTER TABLE " + getTableName() + " ADD " + columnName + " date;";
-                    //Executing the SQL-query
-                    stmt.executeUpdate(sql);
-                    //Closing the statement
-                    stmt.close();
-                }
-                case 5 -> {
-                    //Creating the SQL-query
-                    sql = "ALTER TABLE " + getTableName() + " ADD " + columnName + " boolean;";
-                    //Executing the SQL-query
-                    stmt.executeUpdate(sql);
-                    //Closing the statement
-                    stmt.close();
-                }
-                default -> throw new IllegalStateException("Unexpected value: " + columnType);
-            }
+        String sql_query;
+        switch (column_type) {
+            case 1 -> sql_query = "ALTER TABLE " + table_name + " ADD " + column_name + " int;";
+            case 2 -> sql_query = "ALTER TABLE " + table_name + " ADD " + column_name + " double;";
+            case 3 -> sql_query = "ALTER TABLE " + table_name + " ADD " + column_name + " VARCHAR(100);";
+            case 4 -> sql_query = "ALTER TABLE " + table_name + " ADD " + column_name + " date;";
+            case 5 -> sql_query = "ALTER TABLE " + table_name + " ADD " + column_name + " boolean;";
+            default -> throw new IllegalStateException("Unexpected value: " + column_type);
         }
+        stmt.executeUpdate(sql_query);
+        stmt.close();
+    }
+
+    public void deleteColumnFromTable(String table_name, String column_name) throws SQLException {
+        Statement stmt = conn.createStatement();
+        String sql_query = "ALTER TABLE " + table_name + " DROP COLUMN " + column_name;
+        stmt.executeUpdate(sql_query);
+        stmt.close();
+    }
+
+    public ArrayList<String> getColumns() throws SQLException {
+        ArrayList<String> columns = new ArrayList<>();
+        String query = "SELECT * FROM " + getTableName();
+        PreparedStatement preparedStatement = conn.prepareStatement(query);
+        ResultSet resultSet = preparedStatement.executeQuery();
+        ResultSetMetaData metaData = resultSet.getMetaData();
+        int columnCount = metaData.getColumnCount();
+        for (int i = 1; i <= columnCount; i++) {
+            String columnName = metaData.getColumnName(i);
+            columns.add(columnName);
+        }
+        return columns;
+    }
+
+    public ArrayList<String> getColumns(String table) throws SQLException {
+        ArrayList<String> columns = new ArrayList<>();
+        PreparedStatement preparedStatement = conn.prepareStatement("SELECT * FROM " + table);
+        ResultSet resultSet = preparedStatement.executeQuery();
+        ResultSetMetaData metaData = resultSet.getMetaData();
+        int columnCount = metaData.getColumnCount();
+        for (int i = 1; i <= columnCount; i++) {
+            String columnName = metaData.getColumnName(i);
+            columns.add(columnName);
+        }
+        return columns;
+    }
 
 
     // Создаем метод addElement для добавления нового объекта DataElement в базу данных
-    public void addElement(DataElement element) throws SQLException {
-        // Создаем объект PreparedStatement для выполнения параметризованных SQL-запросов
-        PreparedStatement pstmt = conn.prepareStatement("INSERT INTO ? (id, data) VALUES (NULL, ?)");
-        // Устанавливаем значение параметра в SQL-запросе с помощью метода setObject
-        pstmt.setObject(1, getTableName());
-        pstmt.setObject(2, element.getData());
-        // Выполняем SQL-запрос с помощью метода executeUpdate
+    public void addElement(String table_name, String column_name, DataElement element) throws SQLException {
+        String sql_query = "INSERT INTO " + table_name + "("+ column_name +") VALUES (?)";
+        PreparedStatement pstmt = conn.prepareStatement(sql_query);
+        pstmt.setObject(1,element.getData());
         pstmt.executeUpdate();
-        // Закрываем объект PreparedStatement
+        pstmt.close();
+    }
+
+    public void addElementToMultipleColumns(String tableName, String[] columnNames, DataElement[] columnValues) throws SQLException {
+        if (columnNames.length != columnValues.length) {
+            throw new IllegalArgumentException("Number of column names should be equal to number of column values.");
+        }
+
+        StringBuilder query = new StringBuilder("INSERT INTO " + tableName + " (");
+
+        for (String columnName : columnNames) {
+            query.append(columnName).append(",");
+        }
+
+        query.setLength(query.length() - 1);  //remove last comma
+        query.append(") VALUES (");
+
+        for (int i = 0; i < columnValues.length; i++) {
+            query.append("?,");
+        }
+
+        query.setLength(query.length() - 1); //remove last comma
+        query.append(");");
+
+        PreparedStatement pstmt = conn.prepareStatement(query.toString());
+
+        for (int i = 0; i < columnValues.length; i++) {
+            pstmt.setObject(i + 1, columnValues[i].getData());
+        }
+
+        pstmt.executeUpdate();
         pstmt.close();
     }
 
     // Создаем метод updateElement для изменения объекта DataElement в базе данных по его id
     public void updateElement(int id, DataElement element) throws SQLException {
         // Создаем объект PreparedStatement для выполнения параметризованных SQL-запросов
-        PreparedStatement pstmt = conn.prepareStatement("UPDATE elements SET data = ? WHERE id = ?");
+        PreparedStatement pstmt = conn.prepareStatement("UPDATE " + getTableName() + " SET data = ? WHERE id = ?");
         // Устанавливаем значения параметров в SQL-запросе с помощью метода setObject
         pstmt.setObject(1, element.getData());
         pstmt.setInt(2, id);
@@ -164,7 +175,7 @@ class Database {
         // Создаем объект Statement для выполнения SQL-запросов
         Statement stmt = conn.createStatement();
         // Определяем SQL-запрос для выборки всех данных из таблицы elements
-        String sql = "SELECT * FROM elements";
+        String sql = "SELECT * FROM ";
         // Выполняем SQL-запрос с помощью метода executeQuery и получаем объект ResultSet для обработки результата
         ResultSet rs = stmt.executeQuery(sql);
         // Перебираем все строки в ResultSet с помощью метода next и выводим данные на экран с помощью метода getObject и getInt
@@ -174,6 +185,13 @@ class Database {
         // Закрываем объекты ResultSet и Statement
         rs.close();
         stmt.close();
+    }
+
+    //Getting info by id
+    public ResultSet getElementById(int id) throws SQLException {
+        Statement stmt = conn.createStatement();
+        ResultSet rs = stmt.executeQuery("SELECT * FROM " + getTableName() + " WHERE id = " + id);
+        return rs;
     }
 
     // Создаем метод close для закрытия подключения к базе данных

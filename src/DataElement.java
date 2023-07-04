@@ -13,10 +13,6 @@ class DataElement {
         return data;
     }
 
-    public void setData(Object data) {
-        this.data = data;
-    }
-
     // Переопределяем метод toString для отображения данных
     @Override
     public String toString() {
